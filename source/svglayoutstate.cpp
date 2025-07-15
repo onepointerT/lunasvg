@@ -2,6 +2,7 @@
 #include "svgelement.h"
 #include "svgparserutils.h"
 
+#include <math.h>
 #include <optional>
 
 namespace lunasvg {
@@ -102,7 +103,7 @@ static float parseNumberOrPercentage(std::string_view input, bool allowPercentag
     if(allowPercentage) {
         if(skipDelimiter(input, '%'))
             value /= 100.f;
-        value = std::clamp(value, 0.f, 1.f);
+        value = clampf(value, 0.f, 1.f);
     }
 
     if(!input.empty())

@@ -2,7 +2,7 @@
 #include "svglayoutstate.h"
 #include "svgrenderstate.h"
 
-#include <cmath>
+#include <math.h>
 
 namespace lunasvg {
 
@@ -33,7 +33,7 @@ Rect SVGGeometryElement::strokeBoundingBox() const
             joinLimit *= m_strokeData.miterLimit();
         }
 
-        strokeBoundingBox.inflate(std::max(capLimit, joinLimit));
+        strokeBoundingBox.inflate(fmaxf(capLimit, joinLimit));
     }
 
     for(const auto& markerPosition : m_markerPositions)
@@ -109,7 +109,7 @@ void SVGGeometryElement::updateMarkerPositions(SVGMarkerPositionList& positions,
             outslopePoints[1] = points[0];
             if(index == 0 && markerStart) {
                 auto slope = outslopePoints[1] - outslopePoints[0];
-                auto angle = 180.f * std::atan2(slope.y, slope.x) / PLUTOVG_PI;
+                auto angle = 180.f * atan2(slope.y, slope.x) / PLUTOVG_PI;
                 const auto& orient = markerStart->orient();
                 if(orient.orientType() == SVGAngle::OrientType::AutoStartReverse)
                     angle -= 180.f;
@@ -119,9 +119,9 @@ void SVGGeometryElement::updateMarkerPositions(SVGMarkerPositionList& positions,
             if(index > 0 && markerMid) {
                 auto inslope = inslopePoints[1] - inslopePoints[0];
                 auto outslope = outslopePoints[1] - outslopePoints[0];
-                auto inangle = 180.f * std::atan2(inslope.y, inslope.x) / PLUTOVG_PI;
-                auto outangle = 180.f * std::atan2(outslope.y, outslope.x) / PLUTOVG_PI;
-                if(std::abs(inangle - outangle) > 180.f)
+                auto inangle = 180.f * atan2(inslope.y, inslope.x) / PLUTOVG_PI;
+                auto outangle = 180.f * atan2(outslope.y, outslope.x) / PLUTOVG_PI;
+                if(abs(inangle - outangle) > 180.f)
                     inangle += 360.f;
                 auto angle = (inangle + outangle) * 0.5f;
                 positions.emplace_back(markerMid, origin, angle);
@@ -130,7 +130,7 @@ void SVGGeometryElement::updateMarkerPositions(SVGMarkerPositionList& positions,
 
         if(markerEnd && it.isDone()) {
             auto slope = inslopePoints[1] - inslopePoints[0];
-            auto angle = 180.f * std::atan2(slope.y, slope.x) / PLUTOVG_PI;
+            auto angle = 180.f * atan2(slope.y, slope.x) / PLUTOVG_PI;
             positions.emplace_back(markerEnd, origin, angle);
         }
 
@@ -224,8 +224,8 @@ Rect SVGRectElement::updateShape(Path& path)
     if(rx <= 0.f) rx = ry;
     if(ry <= 0.f) ry = rx;
 
-    rx = std::min(rx, width / 2.f);
-    ry = std::min(ry, height / 2.f);
+    rx = fminf(rx, width / 2.f);
+    ry = fminf(ry, height / 2.f);
 
     path.addRoundRect(x, y, width, height, rx, ry);
     return Rect(x, y, width, height);

@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.15)
 
 set(LUNASVG_VERSION_MAJOR 3)
 set(LUNASVG_VERSION_MINOR 3)
-set(LUNASVG_VERSION_MICRO 0)
+set(LUNASVG_VERSION_MICRO 1)
 
-project(lunasvg LANGUAGES CXX VERSION ${LUNASVG_VERSION_MAJOR}.${LUNASVG_VERSION_MINOR}.${LUNASVG_VERSION_MICRO})
+project(lunasvg LANGUAGES CXX C VERSION ${LUNASVG_VERSION_MAJOR}.${LUNASVG_VERSION_MINOR}.${LUNASVG_VERSION_MICRO})
 
 option(USE_SYSTEM_PLUTOVG "Use system plutovg library" OFF)
 
@@ -15,10 +15,44 @@ if(USE_SYSTEM_PLUTOVG)
     endif()
 endif()
 
+include_directories( include )
+include_directories( lib )
+include_directories( lib/libm/src/ce-libm )
+include_directories( lib/plutovg/include )
+
+add_subdirectory( lib/libm )
+set( MATH_LIBRARY m_ce ) # Business as usual
+
 if(NOT plutovg_FOUND)
     message(STATUS "Using plutovg submodule.")
-    add_subdirectory(plutovg)
+    option(PLUTOVG_BUILD_EXAMPLES "Build examples" OFF)
+    file( GLOB PLUTOVG_SOURCES lib/plutovg/source/*.c )
+    add_library( plutovg ${PLUTOVG_SOURCES} )
+    target_link_libraries( plutovg ${MATH_LIBRARY} )
 endif()
+
+
+set(nanosvg_sources
+    source/nanosvg.c
+    source/nanosvgrast.c)
+
+set(nanosvg_headers
+    include/nanosvg.h
+    include/nanosvgrast.h)
+
+add_library(nanosvg ${nanosvg_sources} ${nanosvg_headers})
+add_library(nanosvg::nanosvg ALIAS nanosvg)
+
+if(MATH_LIBRARY)
+    target_link_libraries(nanosvg PUBLIC ${MATH_LIBRARY})
+endif()
+
+set_target_properties(nanosvg PROPERTIES
+    SOVERSION ${LUNASVG_VERSION_MAJOR}
+    C_VISIBILITY_PRESET hidden
+    C_STANDARD_REQUIRED ON
+    C_STANDARD 99
+)
 
 set(lunasvg_sources
     source/lunasvg.cpp
@@ -31,6 +65,9 @@ set(lunasvg_sources
     source/svgproperty.cpp
     source/svgrenderstate.cpp
     source/svgtextelement.cpp
+    source/svgpathelement.cpp
+#    source/svgpath.cpp
+#    source/svgcurve.cpp
 )
 
 set(lunasvg_headers
@@ -44,12 +81,15 @@ set(lunasvg_headers
     source/svgproperty.h
     source/svgrenderstate.h
     source/svgtextelement.h
+    source/svgpathelement.h
+#    source/svgpath.h
+#    source/svgcurve.h
 )
 
 add_library(lunasvg ${lunasvg_sources} ${lunasvg_headers})
 add_library(lunasvg::lunasvg ALIAS lunasvg)
 
-target_link_libraries(lunasvg PRIVATE plutovg::plutovg)
+target_link_libraries(lunasvg PRIVATE plutovg nanosvg::nanosvg ${MATH_LIBRARY})
 
 set_target_properties(lunasvg PROPERTIES
     SOVERSION ${LUNASVG_VERSION_MAJOR}
@@ -90,6 +130,27 @@ write_basic_package_version_file(lunasvgConfigVersion.cmake
 install(FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/include/lunasvg.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/lunasvg
+)
+
+install(TARGETS plutovg
+    EXPORT lunasvgTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(TARGETS m_ce
+    EXPORT lunasvgTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(TARGETS nanosvg
+    EXPORT lunasvgTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 install(TARGETS lunasvg
@@ -146,7 +207,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/lunasvg.pc"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
 )
 
-option(LUNASVG_BUILD_EXAMPLES "Build examples" ON)
+option(LUNASVG_BUILD_EXAMPLES "Build examples" OFF)
 if(LUNASVG_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()

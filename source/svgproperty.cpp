@@ -3,6 +3,7 @@
 #include "svgparserutils.h"
 
 #include <cassert>
+#include <math.h>
 
 namespace lunasvg {
 
@@ -336,7 +337,7 @@ float LengthContext::viewportDimension(LengthDirection direction) const
     case LengthDirection::Vertical:
         return viewportSize.h;
     default:
-        return std::sqrt(viewportSize.w * viewportSize.w + viewportSize.h * viewportSize.h) / PLUTOVG_SQRT2;
+        return sqrt(viewportSize.w * viewportSize.w + viewportSize.h * viewportSize.h) / PLUTOVG_SQRT2;
     }
 }
 

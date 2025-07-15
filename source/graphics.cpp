@@ -2,7 +2,7 @@
 #include "lunasvg.h"
 
 #include <cfloat>
-#include <cmath>
+#include <math.h>
 
 namespace lunasvg {
 
@@ -140,12 +140,12 @@ Rect Transform::mapRect(const Rect& rect) const
 
 float Transform::xScale() const
 {
-    return std::sqrt(m_matrix.a * m_matrix.a + m_matrix.b * m_matrix.b);
+    return sqrt(m_matrix.a * m_matrix.a + m_matrix.b * m_matrix.b);
 }
 
 float Transform::yScale() const
 {
-    return std::sqrt(m_matrix.c * m_matrix.c + m_matrix.d * m_matrix.d);
+    return sqrt(m_matrix.c * m_matrix.c + m_matrix.d * m_matrix.d);
 }
 
 bool Transform::parse(const char* data, size_t length)
@@ -547,10 +547,10 @@ std::shared_ptr<Canvas> Canvas::create(float x, float y, float width, float heig
     constexpr int kMaxSize = 1 << 15;
     if(width <= 0 || height <= 0 || width >= kMaxSize || height >= kMaxSize)
         return std::shared_ptr<Canvas>(new Canvas(0, 0, 1, 1));
-    auto l = static_cast<int>(std::floor(x));
-    auto t = static_cast<int>(std::floor(y));
-    auto r = static_cast<int>(std::ceil(x + width));
-    auto b = static_cast<int>(std::ceil(y + height));
+    auto l = static_cast<int>(floor(x));
+    auto t = static_cast<int>(floor(y));
+    auto r = static_cast<int>(ceil(x + width));
+    auto b = static_cast<int>(ceil(y + height));
     return std::shared_ptr<Canvas>(new Canvas(l, t, r - l, b - t));
 }
 

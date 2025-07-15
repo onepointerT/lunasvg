@@ -3,8 +3,9 @@
 #include "svgrenderstate.h"
 
 #include <cstring>
-#include <fstream>
-#include <cmath>
+#include <cstdio>
+#include <math.h>
+#include <string>
 
 int lunasvg_version()
 {
@@ -346,12 +347,12 @@ Bitmap Element::renderToBitmap(int width, int height, uint32_t backgroundColor) 
     if(elementBounds.isEmpty())
         return Bitmap();
     if(width <= 0 && height <= 0) {
-        width = static_cast<int>(std::ceil(elementBounds.w));
-        height = static_cast<int>(std::ceil(elementBounds.h));
+        width = static_cast<int>(ceil(elementBounds.w));
+        height = static_cast<int>(ceil(elementBounds.h));
     } else if(width > 0 && height <= 0) {
-        height = static_cast<int>(std::ceil(width * elementBounds.h / elementBounds.w));
+        height = static_cast<int>(ceil(width * elementBounds.h / elementBounds.w));
     } else if(height > 0 && width <= 0) {
-        width = static_cast<int>(std::ceil(height * elementBounds.w / elementBounds.h));
+        width = static_cast<int>(ceil(height * elementBounds.w / elementBounds.h));
     }
 
     auto xScale = width / elementBounds.w;
@@ -418,13 +419,24 @@ SVGElement* Element::element(bool layout) const
 
 std::unique_ptr<Document> Document::loadFromFile(const std::string& filename)
 {
-    std::ifstream fs;
-    fs.open(filename);
-    if(!fs.is_open())
-        return nullptr;
-    std::string content;
-    std::getline(fs, content, '\0');
-    fs.close();
+    FILE* fp = nullptr;
+	size_t size;
+	char* data = nullptr;
+
+	fp = std::fopen(filename.c_str(), "rb");
+	if (!fp) return nullptr;
+	std::fseek(fp, 0, SEEK_END);
+	size = std::ftell(fp);
+	std::fseek(fp, 0, SEEK_SET);
+	data = (char*) std::malloc(sizeof(char)*size+1);
+	if (data == nullptr) return nullptr;
+	if (std::fread(data, 1, size, fp) != size) return nullptr;
+	data[size] = '\0';	// Must be null terminated.
+	std::fclose(fp);
+
+    std::string content = data;
+	std::free(data);
+
     return loadFromData(content);
 }
 
@@ -487,12 +499,12 @@ Bitmap Document::renderToBitmap(int width, int height, uint32_t backgroundColor)
     if(intrinsicWidth == 0.f || intrinsicHeight == 0.f)
         return Bitmap();
     if(width <= 0 && height <= 0) {
-        width = static_cast<int>(std::ceil(intrinsicWidth));
-        height = static_cast<int>(std::ceil(intrinsicHeight));
+        width = static_cast<int>(ceil(intrinsicWidth));
+        height = static_cast<int>(ceil(intrinsicHeight));
     } else if(width > 0 && height <= 0) {
-        height = static_cast<int>(std::ceil(width * intrinsicHeight / intrinsicWidth));
+        height = static_cast<int>(ceil(width * intrinsicHeight / intrinsicWidth));
     } else if(height > 0 && width <= 0) {
-        width = static_cast<int>(std::ceil(height * intrinsicWidth / intrinsicHeight));
+        width = static_cast<int>(ceil(height * intrinsicWidth / intrinsicHeight));
     }
 
     auto xScale = width / intrinsicWidth;

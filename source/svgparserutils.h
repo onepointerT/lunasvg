@@ -1,7 +1,7 @@
 #ifndef LUNASVG_SVGPARSERUTILS_H
 #define LUNASVG_SVGPARSERUTILS_H
 
-#include <cmath>
+#include <math.h>
 #include <string_view>
 #include <limits>
 
@@ -201,7 +201,7 @@ inline bool parseNumber(std::string_view& input, T& number)
 
     number = sign * (integer + fraction);
     if(exponent)
-        number *= static_cast<T>(std::pow(10.0, expsign * exponent));
+        number *= static_cast<T>(pow(10.0, expsign * exponent));
     return number >= -maxValue && number <= maxValue;
 }
 
