@@ -1,3 +1,4 @@
 [submodule "lib/libm"]
 	path = lib/libm
 	url = https://github.com/onepointerT/ce-libm.git
+	commit = fb33fb2019ca230f7a17460072708461ab608f56

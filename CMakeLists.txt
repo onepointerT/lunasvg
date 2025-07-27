@@ -18,6 +18,7 @@ endif()
 include_directories( include )
 include_directories( lib )
 include_directories( lib/libm/src/ce-libm )
+include_directories( lib/libm/lib/endian_h )
 include_directories( lib/plutovg/include )
 
 add_subdirectory( lib/libm )
@@ -31,6 +32,7 @@ if(NOT plutovg_FOUND)
     target_link_libraries( plutovg ${MATH_LIBRARY} )
 endif()
 
+#set( CMAKE_C_STANDARD 23 )
 
 set(nanosvg_sources
     source/nanosvg.c
@@ -48,6 +50,27 @@ if(MATH_LIBRARY)
 endif()
 
 set_target_properties(nanosvg PROPERTIES
+    SOVERSION ${LUNASVG_VERSION_MAJOR}
+    C_VISIBILITY_PRESET hidden
+    C_STANDARD_REQUIRED ON
+    C_STANDARD 99
+)
+
+
+set(lunasvg_paths_sources
+    source/lunapaths.c)
+
+set(lunasvg_paths_headers
+    include/lunapaths.h)
+
+add_library(lunasvg_paths ${lunasvg_paths_sources} ${lunasvg_paths_sources})
+add_library(lunasvg::lunasvg_paths ALIAS lunasvg_paths)
+
+if(MATH_LIBRARY)
+    target_link_libraries(lunasvg_paths PUBLIC ${MATH_LIBRARY} nanosvg)
+endif()
+
+set_target_properties(lunasvg_paths PROPERTIES
     SOVERSION ${LUNASVG_VERSION_MAJOR}
     C_VISIBILITY_PRESET hidden
     C_STANDARD_REQUIRED ON
@@ -89,7 +112,7 @@ set(lunasvg_headers
 add_library(lunasvg ${lunasvg_sources} ${lunasvg_headers})
 add_library(lunasvg::lunasvg ALIAS lunasvg)
 
-target_link_libraries(lunasvg PRIVATE plutovg nanosvg::nanosvg ${MATH_LIBRARY})
+target_link_libraries(lunasvg PRIVATE plutovg nanosvg::nanosvg lunasvg_paths ${MATH_LIBRARY})
 
 set_target_properties(lunasvg PROPERTIES
     SOVERSION ${LUNASVG_VERSION_MAJOR}
@@ -147,6 +170,13 @@ install(TARGETS m_ce
 )
 
 install(TARGETS nanosvg
+    EXPORT lunasvgTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(TARGETS lunasvg_paths
     EXPORT lunasvgTargets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
